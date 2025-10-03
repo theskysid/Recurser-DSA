@@ -1,0 +1,30 @@
+version: '3.8'
+
+# Development override for docker-compose
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  backend:
+    environment:
+      - SPRING_PROFILES_ACTIVE=dev
+      - SPRING_DATASOURCE_URL=jdbc:h2:mem:testdb
+      - SPRING_DATASOURCE_USERNAME=sa
+      - SPRING_DATASOURCE_PASSWORD=password
+    ports:
+      - "8080:8080"
+      - "8081:8081"  # Additional port for debugging
+    volumes:
+      - ./backend/src:/app/src
+    depends_on:
+      - database
+
+  frontend:
+    volumes:
+      - ./frontend/src:/app/src
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8080
+
+  # Remove database dependency for dev mode if using H2
+  # database:
+  #   profiles:
+  #     - production
