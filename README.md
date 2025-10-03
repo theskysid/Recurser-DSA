@@ -315,6 +315,181 @@ The application implements a queue-based revision system:
 - Protected API endpoints
 - SQL injection prevention via JPA
 
+## 🚀 Cloud Deployment Guide
+
+### Prerequisites
+
+1. **Neon PostgreSQL Database** (Free tier available)
+   - Sign up at [Neon](https://neon.tech)
+   - Create a new database
+   - Copy the connection string
+
+2. **GitHub Repository**
+   - Push your code to GitHub
+   - Ensure your repository is public or you have appropriate access
+
+### Step 1: Deploy Backend on Render
+
+1. **Create Render Account**
+   - Sign up at [Render](https://render.com)
+   - Connect your GitHub account
+
+2. **Create New Web Service**
+   - Click "New" → "Web Service"
+   - Connect your GitHub repository
+   - Select the repository: `Recurser-DSA`
+
+3. **Configure Build Settings**
+   ```
+   Name: dsa-tracker-backend
+   Region: Choose your preferred region
+   Branch: main
+   Root Directory: (leave blank)
+   Runtime: Docker
+   Build Command: ./render-build.sh
+   Start Command: java -jar backend/target/dsa-tracker-backend-0.0.1-SNAPSHOT.jar --spring.profiles.active=production
+   ```
+
+4. **Set Environment Variables**
+   ```
+   DATABASE_URL=your_neon_connection_string_here
+   JWT_SECRET=your-super-secret-jwt-key-here-make-it-long-and-complex
+   CORS_ORIGINS=https://your-frontend-url.vercel.app,http://localhost:3000,http://localhost:5173
+   SPRING_PROFILES_ACTIVE=production
+   PORT=8080
+   ```
+
+   **Example DATABASE_URL format:**
+   ```
+   postgresql://username:password@host:5432/database?sslmode=require
+   ```
+
+5. **Deploy**
+   - Click "Create Web Service"
+   - Wait for the build and deployment to complete
+   - Note down your backend URL (e.g., `https://your-app.onrender.com`)
+
+### Step 2: Deploy Frontend on Vercel
+
+1. **Create Vercel Account**
+   - Sign up at [Vercel](https://vercel.com)
+   - Connect your GitHub account
+
+2. **Import Project**
+   - Click "New Project"
+   - Import your GitHub repository
+   - Select the `frontend` folder as the root directory
+
+3. **Configure Build Settings**
+   ```
+   Framework Preset: Vite
+   Root Directory: frontend
+   Build Command: npm run build
+   Output Directory: dist
+   Install Command: npm install
+   ```
+
+4. **Set Environment Variables**
+   ```
+   VITE_API_BASE_URL=https://your-backend-url.onrender.com
+   ```
+
+5. **Deploy**
+   - Click "Deploy"
+   - Wait for the build and deployment to complete
+   - Note down your frontend URL (e.g., `https://your-app.vercel.app`)
+
+### Step 3: Update CORS Configuration
+
+1. **Update Backend CORS**
+   - Go back to your Render dashboard
+   - Update the `CORS_ORIGINS` environment variable to include your Vercel URL:
+   ```
+   CORS_ORIGINS=https://your-app.vercel.app,http://localhost:3000,http://localhost:5173
+   ```
+
+2. **Redeploy Backend**
+   - In Render dashboard, trigger a manual deploy to apply the CORS changes
+
+### Step 4: Test Your Deployment
+
+1. **Access Your Application**
+   - Frontend: `https://your-app.vercel.app`
+   - Backend API: `https://your-backend.onrender.com`
+   - Health Check: `https://your-backend.onrender.com/actuator/health`
+
+2. **Test Functionality**
+   - Register a new user
+   - Login with credentials
+   - Add DSA questions
+   - Use the revision system
+   - Check analytics dashboard
+
+### Deployment Configuration Files
+
+- `backend/src/main/resources/application-production.properties` - Production backend config
+- `frontend/vercel.json` - Vercel deployment configuration
+- `frontend/.env.production` - Production environment variables
+- `render-build.sh` - Render build script
+
+### Environment Variables Reference
+
+#### Backend (Render)
+```bash
+DATABASE_URL=postgresql://user:pass@host:5432/db?sslmode=require
+JWT_SECRET=your-super-secret-jwt-key-minimum-32-characters
+CORS_ORIGINS=https://your-frontend.vercel.app
+SPRING_PROFILES_ACTIVE=production
+PORT=8080
+```
+
+#### Frontend (Vercel)
+```bash
+VITE_API_BASE_URL=https://your-backend.onrender.com
+```
+
+### Troubleshooting
+
+#### Common Issues
+
+1. **CORS Errors**
+   - Ensure your Vercel URL is in the `CORS_ORIGINS` environment variable
+   - Check that the backend is redeployed after CORS changes
+
+2. **Database Connection Issues**
+   - Verify your Neon database connection string
+   - Ensure the database is accessible from Render's servers
+
+3. **Build Failures**
+   - Check Render build logs for specific error messages
+   - Ensure all required environment variables are set
+
+4. **Frontend API Connection Issues**
+   - Verify `VITE_API_BASE_URL` points to your Render backend URL
+   - Check browser network tab for failed API requests
+
+#### Monitoring
+
+- **Backend Health**: `https://your-backend.onrender.com/actuator/health`
+- **Render Logs**: Available in Render dashboard
+- **Vercel Logs**: Available in Vercel dashboard
+
+### Cost Considerations
+
+- **Neon PostgreSQL**: Free tier includes 3 GiB storage
+- **Render**: Free tier includes 750 hours/month
+- **Vercel**: Generous free tier for frontend hosting
+
+### Performance Optimization
+
+1. **Backend**
+   - Render free tier may sleep after inactivity
+   - Consider upgrading to paid tier for production use
+
+2. **Frontend**
+   - Vercel provides excellent CDN performance
+   - Images and assets are automatically optimized
+
 ## Future Enhancements
 
 - [ ] Question difficulty levels
@@ -325,6 +500,8 @@ The application implements a queue-based revision system:
 - [ ] Mobile responsive improvements
 - [ ] Bulk question import
 - [ ] Progress export functionality
+- [ ] CI/CD pipeline with GitHub Actions
+- [ ] Automated testing and deployment
 
 ## Contributing
 
