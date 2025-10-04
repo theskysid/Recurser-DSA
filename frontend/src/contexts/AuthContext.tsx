@@ -29,15 +29,27 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const token = authService.getToken();
-    const storedUsername = authService.getUsername();
-    
-    if (token && storedUsername) {
-      setIsAuthenticated(true);
-      setUsername(storedUsername);
-    }
-    
-    setLoading(false);
+    const validateAuth = async () => {
+      const token = authService.getToken();
+      const storedUsername = authService.getUsername();
+      
+      if (token && storedUsername) {
+        // Validate token with server
+        const isValid = await authService.validateToken();
+        if (isValid) {
+          setIsAuthenticated(true);
+          setUsername(storedUsername);
+        } else {
+          // Token is invalid, clear auth state
+          setIsAuthenticated(false);
+          setUsername(null);
+        }
+      }
+      
+      setLoading(false);
+    };
+
+    validateAuth();
   }, []);
 
   const login = (token: string, username: string) => {
