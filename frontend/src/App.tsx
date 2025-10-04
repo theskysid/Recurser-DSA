@@ -7,12 +7,14 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import AddQuestion from './pages/AddQuestion';
 import Stats from './pages/Stats';
+import Debug from './components/Debug';
 
 const App: React.FC = () => {
   return (
     <AuthProvider>
       <Router>
         <div className="App">
+          <Debug />
           <Routes>
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
