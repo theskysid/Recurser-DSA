@@ -48,10 +48,12 @@ public class JwtUtils {
 
     public boolean validateJwtToken(String authToken) {
         try {
+            logger.debug("Validating JWT token with secret length: {}", jwtSecret.length());
             Jwts.parser()
                     .verifyWith(getSigningKey())
                     .build()
                     .parseSignedClaims(authToken);
+            logger.debug("JWT token validation successful");
             return true;
         } catch (MalformedJwtException e) {
             logger.error("Invalid JWT token: {}", e.getMessage());
@@ -61,6 +63,8 @@ public class JwtUtils {
             logger.error("JWT token is unsupported: {}", e.getMessage());
         } catch (IllegalArgumentException e) {
             logger.error("JWT claims string is empty: {}", e.getMessage());
+        } catch (Exception e) {
+            logger.error("JWT validation failed with unexpected error: {}", e.getMessage());
         }
 
         return false;
