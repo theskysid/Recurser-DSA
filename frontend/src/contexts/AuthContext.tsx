@@ -30,20 +30,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     const validateAuth = async () => {
-      const token = authService.getToken();
-      const storedUsername = authService.getUsername();
-      
-      if (token && storedUsername) {
-        // Validate token with server
-        const isValid = await authService.validateToken();
-        if (isValid) {
-          setIsAuthenticated(true);
-          setUsername(storedUsername);
+      try {
+        const token = authService.getToken();
+        const storedUsername = authService.getUsername();
+        
+        if (token && storedUsername) {
+          // Validate token with server
+          const isValid = await authService.validateToken();
+          if (isValid) {
+            setIsAuthenticated(true);
+            setUsername(storedUsername);
+          } else {
+            // Token is invalid, clear auth state
+            setIsAuthenticated(false);
+            setUsername(null);
+            authService.logout();
+          }
         } else {
-          // Token is invalid, clear auth state
+          // No token or username, ensure clean state
           setIsAuthenticated(false);
           setUsername(null);
+          authService.logout();
         }
+      } catch (error) {
+        console.error('Auth validation error:', error);
+        // On any error, clear auth state
+        setIsAuthenticated(false);
+        setUsername(null);
+        authService.logout();
       }
       
       setLoading(false);

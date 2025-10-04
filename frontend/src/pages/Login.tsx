@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { authService } from '../services/authService';
 import { LoginRequest } from '../types';
@@ -11,9 +11,20 @@ const Login: React.FC = () => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [sessionMessage, setSessionMessage] = useState('');
   
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    const sessionParam = searchParams.get('session');
+    if (sessionParam === 'expired') {
+      setSessionMessage('Your session has expired. Please log in again.');
+      // Clear any stale auth data
+      authService.logout();
+    }
+  }, [searchParams]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -50,6 +61,11 @@ const Login: React.FC = () => {
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+          {sessionMessage && (
+            <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
+              {sessionMessage}
+            </div>
+          )}
           {error && (
             <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded">
               {error}
