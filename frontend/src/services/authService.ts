@@ -1,39 +1,26 @@
 import api from './api';
 import { LoginRequest, SignupRequest, JwtResponse, MessageResponse } from '../types';
 
-// Function to check if token is expired
-const isTokenExpired = (token: string): boolean => {
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    const currentTime = Date.now() / 1000;
-    return payload.exp < currentTime;
-  } catch (error) {
-    return true; // If we can't decode, consider it expired
+// Helper function to get cookie by name
+const getCookie = (name: string): string | null => {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) {
+    return parts.pop()?.split(';').shift() || null;
   }
+  return null;
 };
 
-// Function to get token payload
-const getTokenPayload = (token: string): any => {
-  try {
-    return JSON.parse(atob(token.split('.')[1]));
-  } catch (error) {
-    return null;
-  }
-};
-
-// Function to validate token belongs to current user
-const validateTokenOwnership = (token: string, username: string): boolean => {
-  try {
-    const payload = getTokenPayload(token);
-    return payload && payload.sub === username;
-  } catch (error) {
-    return false;
-  }
+// Function to check if token exists in cookie
+const hasAuthCookie = (): boolean => {
+  return getCookie('jwt-token') !== null;
 };
 
 export const authService = {
   login: async (credentials: LoginRequest): Promise<JwtResponse> => {
     const response = await api.post('/api/auth/login', credentials);
+    // JWT is automatically stored in HTTP-only cookie by backend
+    // We only need to store the username for display purposes
     return response.data;
   },
 
@@ -42,99 +29,63 @@ export const authService = {
     return response.data;
   },
 
-  logout: () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('username');
+  logout: async () => {
+    try {
+      // Call backend logout endpoint to clear cookie
+      await api.post('/api/auth/logout');
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      // Clear username from localStorage
+      localStorage.removeItem('username');
+      sessionStorage.clear();
+    }
   },
 
   // Force logout and clear all auth state
-  forceLogout: () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('username');
-    sessionStorage.clear();
-    // Clear any cached authentication state
-    window.location.href = '/login';
+  forceLogout: async () => {
+    try {
+      await api.post('/api/auth/logout');
+    } catch (error) {
+      console.error('Force logout error:', error);
+    } finally {
+      localStorage.removeItem('username');
+      sessionStorage.clear();
+      window.location.href = '/login';
+    }
   },
 
   isAuthenticated: (): boolean => {
-    const token = localStorage.getItem('token');
+    // Check if JWT cookie exists and username is stored
+    const hasToken = hasAuthCookie();
     const username = localStorage.getItem('username');
-    
-    if (!token || !username) return false;
-    
-    // Check if token is expired
-    if (isTokenExpired(token)) {
-      // Clean up expired token
-      localStorage.removeItem('token');
-      localStorage.removeItem('username');
-      return false;
-    }
-
-    // Check if token belongs to the stored username
-    if (!validateTokenOwnership(token, username)) {
-      // Token doesn't match username, clean up
-      localStorage.removeItem('token');
-      localStorage.removeItem('username');
-      return false;
-    }
-    
-    return true;
+    return hasToken && username !== null;
   },
 
   getToken: (): string | null => {
-    const token = localStorage.getItem('token');
-    const username = localStorage.getItem('username');
-    
-    if (!token || !username) return null;
-    
-    // Check if token is expired
-    if (isTokenExpired(token)) {
-      // Clean up expired token
-      localStorage.removeItem('token');
-      localStorage.removeItem('username');
-      return null;
-    }
-
-    // Check if token belongs to the stored username
-    if (!validateTokenOwnership(token, username)) {
-      // Token doesn't match username, clean up
-      localStorage.removeItem('token');
-      localStorage.removeItem('username');
-      return null;
-    }
-    
-    return token;
+    // JWT is in HTTP-only cookie, not accessible from JavaScript
+    // This method is kept for compatibility but returns cookie existence
+    return hasAuthCookie() ? 'cookie-based-auth' : null;
   },
 
   getUsername: (): string | null => {
     return localStorage.getItem('username');
   },
 
-  setAuthData: (token: string, username: string) => {
-    // Validate that token belongs to username before storing
-    if (!validateTokenOwnership(token, username)) {
-      console.error('Token does not belong to username:', username);
-      return;
-    }
-    
-    localStorage.setItem('token', token);
+  setAuthData: (_token: string, username: string) => {
+    // JWT is already in cookie, we only store username
+    // _token parameter kept for compatibility but not used
     localStorage.setItem('username', username);
   },
 
   // Method to validate token with server
   validateToken: async (): Promise<boolean> => {
     try {
-      const token = localStorage.getItem('token');
-      if (!token || isTokenExpired(token)) {
-        return false;
-      }
-      
-      // Try to make a request to validate token
+      // Cookie is sent automatically, just make a test request
       await api.get('/api/questions');
       return true;
     } catch (error) {
       // Token is invalid, clean up
-      localStorage.removeItem('token');
       localStorage.removeItem('username');
       return false;
     }

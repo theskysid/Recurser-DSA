@@ -4,11 +4,13 @@ import com.dsatracker.service.UserDetailsServiceImpl;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,6 +28,9 @@ public class AuthTokenFilter extends OncePerRequestFilter {
 
     @Autowired
     private UserDetailsServiceImpl userDetailsService;
+
+    @Value("${app.jwt.cookie.name:jwt-token}")
+    private String jwtCookieName;
 
     private static final Logger logger = LoggerFactory.getLogger(AuthTokenFilter.class);
 
@@ -54,12 +59,28 @@ public class AuthTokenFilter extends OncePerRequestFilter {
     }
 
     private String parseJwt(HttpServletRequest request) {
-        String headerAuth = request.getHeader("Authorization");
+        // First, try to get JWT from Cookie
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if (jwtCookieName.equals(cookie.getName())) {
+                    String jwt = cookie.getValue();
+                    if (StringUtils.hasText(jwt)) {
+                        logger.debug("JWT found in cookie: {}", jwtCookieName);
+                        return jwt;
+                    }
+                }
+            }
+        }
 
+        // Fallback to Authorization header for backward compatibility
+        String headerAuth = request.getHeader("Authorization");
         if (StringUtils.hasText(headerAuth) && headerAuth.startsWith("Bearer ")) {
+            logger.debug("JWT found in Authorization header");
             return headerAuth.substring(7);
         }
 
+        logger.debug("No JWT found in cookies or headers");
         return null;
     }
 }

@@ -18,12 +18,15 @@ const Login: React.FC = () => {
   const [searchParams] = useSearchParams();
 
   useEffect(() => {
-    const sessionParam = searchParams.get('session');
-    if (sessionParam === 'expired') {
-      setSessionMessage('Your session has expired. Please log in again.');
-      // Clear any stale auth data
-      authService.logout();
-    }
+    const handleExpiredSession = async () => {
+      const sessionParam = searchParams.get('session');
+      if (sessionParam === 'expired') {
+        setSessionMessage('Your session has expired. Please log in again.');
+        // Clear any stale auth data
+        await authService.logout();
+      }
+    };
+    handleExpiredSession();
   }, [searchParams]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

@@ -5,7 +5,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   username: string | null;
   login: (token: string, username: string) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
   loading: boolean;
 }
 
@@ -44,20 +44,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             // Token is invalid, clear auth state
             setIsAuthenticated(false);
             setUsername(null);
-            authService.logout();
+            await authService.logout();
           }
         } else {
           // No token or username, ensure clean state
           setIsAuthenticated(false);
           setUsername(null);
-          authService.logout();
+          await authService.logout();
         }
       } catch (error) {
         console.error('Auth validation error:', error);
         // On any error, clear auth state
         setIsAuthenticated(false);
         setUsername(null);
-        authService.logout();
+        await authService.logout();
       }
       
       setLoading(false);
@@ -72,8 +72,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setUsername(username);
   };
 
-  const logout = () => {
-    authService.logout();
+  const logout = async () => {
+    await authService.logout();
     setIsAuthenticated(false);
     setUsername(null);
   };

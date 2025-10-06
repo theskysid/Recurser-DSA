@@ -7,32 +7,14 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  withCredentials: true, // Enable sending cookies with requests
 });
 
-// Request interceptor to add auth token
+// Request interceptor - cookies are sent automatically with withCredentials: true
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('token');
-    const username = localStorage.getItem('username');
-    
-    if (token && username) {
-      // Additional validation: check if token belongs to stored username
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        if (payload.sub === username) {
-          config.headers.Authorization = `Bearer ${token}`;
-        } else {
-          // Token doesn't match username, clear storage
-          localStorage.removeItem('token');
-          localStorage.removeItem('username');
-          throw new Error('Token ownership mismatch');
-        }
-      } catch (error) {
-        // Invalid token format, clear storage
-        localStorage.removeItem('token');
-        localStorage.removeItem('username');
-      }
-    }
+    // Cookies are automatically included with each request
+    // No need to manually add Authorization header
     return config;
   },
   (error) => {
@@ -45,8 +27,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401 || error.response?.status === 403) {
-      // Clear invalid tokens
-      localStorage.removeItem('token');
+      // Clear any local storage
       localStorage.removeItem('username');
       sessionStorage.clear();
       
