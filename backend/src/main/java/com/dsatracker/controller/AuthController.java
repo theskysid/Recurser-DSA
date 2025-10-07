@@ -58,7 +58,7 @@ public class AuthController {
         jwtCookie.setSecure(true); // Use HTTPS in production (Render serves over HTTPS)
         jwtCookie.setPath("/");
         jwtCookie.setMaxAge(jwtCookieMaxAge); // 24 hours
-        jwtCookie.setAttribute("SameSite", "None"); // Allow cross-site for frontend/backend on different domains
+        jwtCookie.setAttribute("SameSite", "Lax"); // More compatible setting
 
         response.addCookie(jwtCookie);
 
@@ -73,7 +73,7 @@ public class AuthController {
         jwtCookie.setSecure(true); // Use HTTPS in production
         jwtCookie.setPath("/");
         jwtCookie.setMaxAge(0); // Delete cookie
-        jwtCookie.setAttribute("SameSite", "None"); // Match login cookie settings
+        jwtCookie.setAttribute("SameSite", "Lax"); // Match login cookie settings
 
         response.addCookie(jwtCookie);
 

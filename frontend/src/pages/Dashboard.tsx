@@ -12,12 +12,7 @@ const Dashboard: React.FC = () => {
   const { username, logout } = useAuth();
 
   useEffect(() => {
-    // Small delay to ensure cookie is available before making API call
-    const timer = setTimeout(() => {
-      loadQuestions();
-    }, 200);
-    
-    return () => clearTimeout(timer);
+    loadQuestions();
   }, []);
 
   const loadQuestions = async () => {
