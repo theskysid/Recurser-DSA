@@ -52,13 +52,13 @@ public class AuthController {
 
         User userDetails = (User) authentication.getPrincipal();
 
-        // Create HTTP-only cookie
+        // Create HTTP-only cookie for cross-site usage
         Cookie jwtCookie = new Cookie(jwtCookieName, jwt);
         jwtCookie.setHttpOnly(true); // Prevents JavaScript access
-        jwtCookie.setSecure(true); // Use HTTPS in production (Render serves over HTTPS)
+        jwtCookie.setSecure(true); // Required for SameSite=None
         jwtCookie.setPath("/");
         jwtCookie.setMaxAge(jwtCookieMaxAge); // 24 hours
-        jwtCookie.setAttribute("SameSite", "Lax"); // More compatible setting
+        jwtCookie.setAttribute("SameSite", "None"); // Required for cross-site (Netlify -> Render)
 
         response.addCookie(jwtCookie);
 
@@ -67,13 +67,13 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<?> logoutUser(HttpServletResponse response) {
-        // Clear the JWT cookie
+        // Clear the JWT cookie with matching attributes
         Cookie jwtCookie = new Cookie(jwtCookieName, null);
         jwtCookie.setHttpOnly(true);
-        jwtCookie.setSecure(true); // Use HTTPS in production
+        jwtCookie.setSecure(true); // Must match login cookie
         jwtCookie.setPath("/");
         jwtCookie.setMaxAge(0); // Delete cookie
-        jwtCookie.setAttribute("SameSite", "Lax"); // Match login cookie settings
+        jwtCookie.setAttribute("SameSite", "None"); // Must match login cookie
 
         response.addCookie(jwtCookie);
 

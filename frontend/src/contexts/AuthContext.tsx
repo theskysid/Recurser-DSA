@@ -46,6 +46,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             setUsername(null);
             // Clean up localStorage only, don't call backend
             localStorage.removeItem('username');
+            localStorage.removeItem('jwt-token');
             sessionStorage.clear();
           }
         } else {
@@ -54,6 +55,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           setUsername(null);
           // Just clean local storage, no API call needed
           localStorage.removeItem('username');
+          localStorage.removeItem('jwt-token');
           sessionStorage.clear();
         }
       } catch (error) {
@@ -62,6 +64,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setIsAuthenticated(false);
         setUsername(null);
         localStorage.removeItem('username');
+        localStorage.removeItem('jwt-token');
         sessionStorage.clear();
       }
       

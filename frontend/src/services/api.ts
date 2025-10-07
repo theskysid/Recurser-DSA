@@ -10,11 +10,15 @@ const api = axios.create({
   withCredentials: true, // Enable sending cookies with requests
 });
 
-// Request interceptor - cookies are sent automatically with withCredentials: true
+// Request interceptor - send token in header if cookie might be blocked
 api.interceptors.request.use(
   (config) => {
-    // Cookies are automatically included with each request
-    // No need to manually add Authorization header
+    // Try to get token from localStorage as fallback
+    const token = localStorage.getItem('jwt-token');
+    if (token && token !== 'cookie-based-auth') {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    // Cookies are still sent automatically with withCredentials: true
     return config;
   },
   (error) => {
@@ -32,6 +36,7 @@ api.interceptors.response.use(
       
       // Clear any local storage
       localStorage.removeItem('username');
+      localStorage.removeItem('jwt-token');
       sessionStorage.clear();
       
       // Don't redirect if already on public pages or root

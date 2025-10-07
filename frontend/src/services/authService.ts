@@ -19,8 +19,10 @@ const hasAuthCookie = (): boolean => {
 export const authService = {
   login: async (credentials: LoginRequest): Promise<JwtResponse> => {
     const response = await api.post('/api/auth/login', credentials);
-    // JWT is automatically stored in HTTP-only cookie by backend
-    // We only need to store the username for display purposes
+    // Store token as backup in case cookies are blocked
+    if (response.data.token) {
+      localStorage.setItem('jwt-token', response.data.token);
+    }
     return response.data;
   },
 
@@ -36,8 +38,9 @@ export const authService = {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      // Clear username from localStorage
+      // Clear username AND token from localStorage
       localStorage.removeItem('username');
+      localStorage.removeItem('jwt-token');
       sessionStorage.clear();
     }
   },
@@ -50,6 +53,7 @@ export const authService = {
       console.error('Force logout error:', error);
     } finally {
       localStorage.removeItem('username');
+      localStorage.removeItem('jwt-token');
       sessionStorage.clear();
       window.location.href = '/login';
     }
@@ -62,35 +66,39 @@ export const authService = {
   },
 
   getToken: (): string | null => {
-    // JWT is in HTTP-only cookie, not accessible from JavaScript
-    // This method is kept for compatibility but returns cookie existence
-    return hasAuthCookie() ? 'cookie-based-auth' : null;
+    // Try cookie first, then localStorage as fallback
+    const cookieToken = hasAuthCookie() ? 'cookie-based-auth' : null;
+    if (cookieToken) return cookieToken;
+    
+    // Fallback to localStorage if cookies are blocked
+    return localStorage.getItem('jwt-token');
   },
 
   getUsername: (): string | null => {
     return localStorage.getItem('username');
   },
 
-  setAuthData: (_token: string, username: string) => {
-    // JWT is already in cookie, we only store username
-    // _token parameter kept for compatibility but not used
+  setAuthData: (token: string, username: string) => {
+    // Store both token and username as fallback
+    localStorage.setItem('jwt-token', token);
     localStorage.setItem('username', username);
   },
 
   // Method to validate token with server
   validateToken: async (): Promise<boolean> => {
     try {
-      // Check if we even have a cookie before making request
-      if (!hasAuthCookie()) {
+      // Check if we have any auth method available
+      if (!hasAuthCookie() && !localStorage.getItem('jwt-token')) {
         return false;
       }
       
-      // Cookie is sent automatically, just make a test request
+      // Make a test request - will use cookie or header automatically
       await api.get('/api/questions');
       return true;
     } catch (error) {
       // Token is invalid, clean up
       localStorage.removeItem('username');
+      localStorage.removeItem('jwt-token');
       return false;
     }
   },
