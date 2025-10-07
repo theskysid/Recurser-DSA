@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.env.Environment;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -19,6 +20,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import java.util.Arrays;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -41,6 +43,52 @@ public class AuthController {
     @Value("${app.jwt.cookie.maxAge:86400}")
     private int jwtCookieMaxAge;
 
+    @Autowired
+    private Environment environment;
+
+    private Cookie buildJwtCookie(String jwt) {
+        boolean isProd = false;
+        String[] active = environment.getActiveProfiles();
+        if (active != null) {
+            for (String p : active) {
+                if (p.equalsIgnoreCase("prod") || p.equalsIgnoreCase("production")) {
+                    isProd = true;
+                    break;
+                }
+            }
+        }
+        // If not explicitly prod but host will be HTTPS (Render), we still treat as prod when not running on localhost
+        // This keeps local dev (localhost) workable without Secure cookie blocking in plain HTTP.
+        if (!isProd) {
+            // Heuristic: if NEON / cloud DB profile active we assume remote deployment
+            if (Arrays.stream(active).anyMatch(p -> p.contains("neon"))) {
+                isProd = true;
+            }
+        }
+
+        Cookie jwtCookie = new Cookie(jwtCookieName, jwt);
+        jwtCookie.setHttpOnly(true);
+        jwtCookie.setPath("/");
+        jwtCookie.setMaxAge(jwtCookieMaxAge);
+        if (isProd) {
+            // Cross-site between Netlify (frontend) and Render (backend)
+            jwtCookie.setSecure(true);
+            jwtCookie.setAttribute("SameSite", "None");
+        } else {
+            // Local development (no HTTPS) cannot use SameSite=None + Secure
+            jwtCookie.setSecure(false);
+            jwtCookie.setAttribute("SameSite", "Lax");
+        }
+        return jwtCookie;
+    }
+
+    private Cookie buildClearingCookie() {
+        Cookie clear = buildJwtCookie("");
+        clear.setValue("");
+        clear.setMaxAge(0);
+        return clear;
+    }
+
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest,
             HttpServletResponse response) {
@@ -52,14 +100,7 @@ public class AuthController {
 
         User userDetails = (User) authentication.getPrincipal();
 
-        // Create HTTP-only cookie for cross-site usage
-        Cookie jwtCookie = new Cookie(jwtCookieName, jwt);
-        jwtCookie.setHttpOnly(true); // Prevents JavaScript access
-        jwtCookie.setSecure(true); // Required for SameSite=None
-        jwtCookie.setPath("/");
-        jwtCookie.setMaxAge(jwtCookieMaxAge); // 24 hours
-        jwtCookie.setAttribute("SameSite", "None"); // Required for cross-site (Netlify -> Render)
-
+        Cookie jwtCookie = buildJwtCookie(jwt);
         response.addCookie(jwtCookie);
 
         return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getUsername()));
@@ -67,15 +108,8 @@ public class AuthController {
 
     @PostMapping("/logout")
     public ResponseEntity<?> logoutUser(HttpServletResponse response) {
-        // Clear the JWT cookie with matching attributes
-        Cookie jwtCookie = new Cookie(jwtCookieName, null);
-        jwtCookie.setHttpOnly(true);
-        jwtCookie.setSecure(true); // Must match login cookie
-        jwtCookie.setPath("/");
-        jwtCookie.setMaxAge(0); // Delete cookie
-        jwtCookie.setAttribute("SameSite", "None"); // Must match login cookie
-
-        response.addCookie(jwtCookie);
+        Cookie clear = buildClearingCookie();
+        response.addCookie(clear);
 
         return ResponseEntity.ok(new MessageResponse("Logged out successfully!"));
     }
