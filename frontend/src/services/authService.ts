@@ -56,10 +56,13 @@ export const authService = {
   },
 
   isAuthenticated: (): boolean => {
-    // Check if JWT cookie exists and username is stored
-    const hasToken = hasAuthCookie();
+    // Check if username is stored (primary indicator after successful login)
+    // This is more reliable than checking cookie immediately after login
     const username = localStorage.getItem('username');
-    return hasToken && username !== null;
+    
+    // If username exists, we trust the session is valid
+    // The actual cookie validation happens in API interceptor
+    return username !== null;
   },
 
   getToken: (): string | null => {

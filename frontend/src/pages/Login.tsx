@@ -44,6 +44,11 @@ const Login: React.FC = () => {
     try {
       const response = await authService.login(formData);
       login(response.token, response.username);
+      
+      // Small delay to ensure cookie is set before navigation
+      // This prevents race condition where Dashboard loads before cookie is accessible
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       navigate('/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Login failed');

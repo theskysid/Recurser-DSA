@@ -72,7 +72,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, []);
 
   const login = (token: string, username: string) => {
+    // Set auth data in localStorage
     authService.setAuthData(token, username);
+    
+    // Immediately set authenticated state
+    // We trust the login response - cookie validation happens in API interceptor
     setIsAuthenticated(true);
     setUsername(username);
   };
