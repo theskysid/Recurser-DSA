@@ -20,7 +20,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-@CrossOrigin(origins = "*", maxAge = 3600, allowCredentials = "true")
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -43,7 +42,8 @@ public class AuthController {
     private int jwtCookieMaxAge;
 
     @PostMapping("/login")
-    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest, HttpServletResponse response) {
+    public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginRequest loginRequest,
+            HttpServletResponse response) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
 
@@ -54,12 +54,12 @@ public class AuthController {
 
         // Create HTTP-only cookie
         Cookie jwtCookie = new Cookie(jwtCookieName, jwt);
-        jwtCookie.setHttpOnly(true);  // Prevents JavaScript access
-        jwtCookie.setSecure(false);   // Set to true in production with HTTPS
+        jwtCookie.setHttpOnly(true); // Prevents JavaScript access
+        jwtCookie.setSecure(false); // Set to true in production with HTTPS
         jwtCookie.setPath("/");
         jwtCookie.setMaxAge(jwtCookieMaxAge); // 24 hours
         jwtCookie.setAttribute("SameSite", "Lax"); // CSRF protection
-        
+
         response.addCookie(jwtCookie);
 
         return ResponseEntity.ok(new JwtResponse(jwt, userDetails.getUsername()));
@@ -73,9 +73,9 @@ public class AuthController {
         jwtCookie.setSecure(false);
         jwtCookie.setPath("/");
         jwtCookie.setMaxAge(0); // Delete cookie
-        
+
         response.addCookie(jwtCookie);
-        
+
         return ResponseEntity.ok(new MessageResponse("Logged out successfully!"));
     }
 
