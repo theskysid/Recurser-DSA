@@ -35,7 +35,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         const storedUsername = authService.getUsername();
         
         if (token && storedUsername) {
-          // Validate token with server
+          // Validate token with server only if we have credentials
           const isValid = await authService.validateToken();
           if (isValid) {
             setIsAuthenticated(true);
@@ -44,20 +44,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             // Token is invalid, clear auth state
             setIsAuthenticated(false);
             setUsername(null);
-            await authService.logout();
+            // Clean up localStorage only, don't call backend
+            localStorage.removeItem('username');
+            sessionStorage.clear();
           }
         } else {
-          // No token or username, ensure clean state
+          // No token or username - new user, just set state
           setIsAuthenticated(false);
           setUsername(null);
-          await authService.logout();
+          // Just clean local storage, no API call needed
+          localStorage.removeItem('username');
+          sessionStorage.clear();
         }
       } catch (error) {
         console.error('Auth validation error:', error);
         // On any error, clear auth state
         setIsAuthenticated(false);
         setUsername(null);
-        await authService.logout();
+        localStorage.removeItem('username');
+        sessionStorage.clear();
       }
       
       setLoading(false);

@@ -81,6 +81,11 @@ export const authService = {
   // Method to validate token with server
   validateToken: async (): Promise<boolean> => {
     try {
+      // Check if we even have a cookie before making request
+      if (!hasAuthCookie()) {
+        return false;
+      }
+      
       // Cookie is sent automatically, just make a test request
       await api.get('/api/questions');
       return true;
