@@ -281,8 +281,9 @@ Step 7: Logout
 ## 🔄 Alternative Flows
 
 ### **Flow A: Returning User (Valid Session)**
+
 ```
-Visit / 
+Visit /
   → Home checks auth
   → Has valid cookie ✅
   → validateToken() succeeds
@@ -291,6 +292,7 @@ Visit /
 ```
 
 ### **Flow B: Expired Session**
+
 ```
 Visit /dashboard
   → Cookie expired/missing
@@ -304,6 +306,7 @@ Visit /dashboard
 ```
 
 ### **Flow C: Direct Dashboard Access (Not Authenticated)**
+
 ```
 Visit /dashboard
   → ProtectedRoute checks auth
@@ -317,6 +320,7 @@ Visit /dashboard
 ## 🎯 Key Improvements Made
 
 ### **1. Initial Load Optimization**
+
 ```
 BEFORE:
 New user → AuthContext tries to logout → API call fails → Error
@@ -326,6 +330,7 @@ New user → AuthContext checks storage → No data → Just set state ✅
 ```
 
 ### **2. Token Validation**
+
 ```
 BEFORE:
 Always calls /api/questions → 401 for new users
@@ -335,6 +340,7 @@ Checks cookie exists first → Skip validation if no cookie ✅
 ```
 
 ### **3. API Interceptor**
+
 ```
 BEFORE:
 Any 401 → Redirect to login?session=expired
@@ -346,6 +352,7 @@ AFTER:
 ```
 
 ### **4. Home Routing**
+
 ```
 BEFORE:
 / → /dashboard → 401 → /login?session=expired
@@ -359,6 +366,7 @@ AFTER:
 ## ✅ Final State
 
 **Your app now has:**
+
 - ✅ Clean authentication flow for new users
 - ✅ No unnecessary API calls on first visit
 - ✅ Proper session management with cookies

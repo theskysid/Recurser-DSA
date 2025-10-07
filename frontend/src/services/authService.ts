@@ -56,12 +56,8 @@ export const authService = {
   },
 
   isAuthenticated: (): boolean => {
-    // Check if username is stored (primary indicator after successful login)
-    // This is more reliable than checking cookie immediately after login
+    // Primary check: username in localStorage indicates intent to be logged in
     const username = localStorage.getItem('username');
-    
-    // If username exists, we trust the session is valid
-    // The actual cookie validation happens in API interceptor
     return username !== null;
   },
 

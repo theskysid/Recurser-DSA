@@ -5,6 +5,7 @@
 ### **Test Case 1: First-Time Visitor**
 
 **Expected Flow:**
+
 ```
 1. Visit https://recurser-dsa.netlify.app
    ✅ Should redirect to /login (clean URL, no "session expired")
@@ -21,7 +22,7 @@
    - Username: testuser123
    - Password: password123
    - Confirm: password123
-   
+
 4. Click "Create account"
    ✅ Should show "Registration successful!" message
    ✅ Should auto-redirect to /login after 2 seconds
@@ -42,7 +43,7 @@
    - Category: Arrays
    - Status: Solved
    - Notes: Use hash map for O(n) solution
-   
+
 8. Click "Add Question"
    ✅ Should redirect to /dashboard
    ✅ Should see the new question in the list
@@ -69,6 +70,7 @@
 ### **Test Case 2: User With Active Session**
 
 **Expected Flow:**
+
 ```
 1. Visit https://recurser-dsa.netlify.app (with valid cookie)
    ✅ Should redirect directly to /dashboard
@@ -89,6 +91,7 @@
 ### **Test Case 3: Expired Session**
 
 **Expected Flow:**
+
 ```
 1. User was logged in (has username in localStorage)
 2. Cookie expires or gets deleted
@@ -106,6 +109,7 @@
 ### **Test Case 4: Question Management**
 
 **Add Question:**
+
 ```
 1. Login → Dashboard → "Add Question"
 2. Fill form with valid data
@@ -116,6 +120,7 @@
 ```
 
 **Edit Question:**
+
 ```
 1. Dashboard → Click "Edit" on a question
 2. Modify the fields
@@ -125,6 +130,7 @@
 ```
 
 **Delete Question:**
+
 ```
 1. Dashboard → Click "Delete" on a question
 2. Confirm deletion
@@ -133,6 +139,7 @@
 ```
 
 **Filter Questions:**
+
 ```
 1. Dashboard → Use difficulty filter
    ✅ Shows only selected difficulty
@@ -145,6 +152,7 @@
 ### **Test Case 5: Statistics Page**
 
 **Expected Behavior:**
+
 ```
 1. Add questions with various difficulties and statuses
 2. Visit /stats page
@@ -163,6 +171,7 @@
 ### **Test Case 6: Invalid Credentials**
 
 **Expected Flow:**
+
 ```
 1. Login with wrong password
    ✅ Should show error: "Bad credentials" or "Login failed"
@@ -180,6 +189,7 @@
 ### **Test Case 7: Duplicate Username**
 
 **Expected Flow:**
+
 ```
 1. Register with existing username
    ✅ Should show error: "Username is already taken!"
@@ -193,6 +203,7 @@
 ### **Test Case 8: Password Validation**
 
 **Expected Flow:**
+
 ```
 1. Register with password < 6 characters
    ✅ Should show error: "Password must be at least 6 characters"
@@ -211,6 +222,7 @@
 ### **Test Case 9: Concurrent Users**
 
 **Expected Flow:**
+
 ```
 1. User A logs in (Browser 1)
    ✅ Sees their own questions
@@ -233,6 +245,7 @@
 ### **Test Case 10: Same Browser, Different Users**
 
 **Expected Flow:**
+
 ```
 1. User A logs in → Works
 2. User A logs out → Cookie cleared
@@ -249,6 +262,7 @@
 ### **Test Case 11: Direct URL Access**
 
 **Without Authentication:**
+
 ```
 1. Visit /dashboard directly
    ✅ Redirects to /login
@@ -267,6 +281,7 @@
 ```
 
 **With Authentication:**
+
 ```
 1. Visit /login directly
    ✅ Redirects to /dashboard
@@ -288,6 +303,7 @@
 ### **Test Case 12: Cookie Attributes**
 
 **Check in DevTools (F12 → Application → Cookies):**
+
 ```
 Cookie Name: jwt-token
 ✅ HttpOnly: true (cannot access via JavaScript)
@@ -299,6 +315,7 @@ Cookie Name: jwt-token
 ```
 
 **JavaScript Access Test:**
+
 ```javascript
 // In browser console
 console.log(document.cookie);
@@ -311,6 +328,7 @@ console.log(document.cookie);
 ### **Test Case 13: CORS Configuration**
 
 **Expected Behavior:**
+
 ```
 1. Frontend (Netlify) → Backend (Render)
    ✅ No CORS errors in console
@@ -329,6 +347,7 @@ console.log(document.cookie);
 ### **Test Case 14: Loading States**
 
 **Expected Behavior:**
+
 ```
 1. Initial page load
    ✅ Shows "Loading..." briefly
@@ -351,6 +370,7 @@ console.log(document.cookie);
 ### **Test Case 15: Network Errors**
 
 **Simulate Offline:**
+
 ```
 1. Turn off network
 2. Try to login
@@ -368,6 +388,7 @@ console.log(document.cookie);
 ### **Test Case 16: Backend Down**
 
 **If Backend is Down:**
+
 ```
 1. Try to login
    ✅ Shows connection error
@@ -428,6 +449,7 @@ console.log(document.cookie);
 ## 📝 Testing Checklist
 
 ### Frontend:
+
 - [ ] Home routing works correctly
 - [ ] Login form validates input
 - [ ] Registration form validates input
@@ -438,6 +460,7 @@ console.log(document.cookie);
 - [ ] Error messages display properly
 
 ### Backend:
+
 - [ ] `/api/auth/**` endpoints are public
 - [ ] Cookie is set on login
 - [ ] Cookie is cleared on logout
@@ -448,6 +471,7 @@ console.log(document.cookie);
 - [ ] User data is isolated per user
 
 ### Integration:
+
 - [ ] End-to-end registration works
 - [ ] End-to-end login works
 - [ ] Question CRUD operations work

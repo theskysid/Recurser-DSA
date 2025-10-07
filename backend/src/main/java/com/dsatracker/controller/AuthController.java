@@ -55,10 +55,10 @@ public class AuthController {
         // Create HTTP-only cookie
         Cookie jwtCookie = new Cookie(jwtCookieName, jwt);
         jwtCookie.setHttpOnly(true); // Prevents JavaScript access
-        jwtCookie.setSecure(false); // Set to true in production with HTTPS
+        jwtCookie.setSecure(true); // Use HTTPS in production (Render serves over HTTPS)
         jwtCookie.setPath("/");
         jwtCookie.setMaxAge(jwtCookieMaxAge); // 24 hours
-        jwtCookie.setAttribute("SameSite", "Lax"); // CSRF protection
+        jwtCookie.setAttribute("SameSite", "None"); // Allow cross-site for frontend/backend on different domains
 
         response.addCookie(jwtCookie);
 
@@ -70,9 +70,10 @@ public class AuthController {
         // Clear the JWT cookie
         Cookie jwtCookie = new Cookie(jwtCookieName, null);
         jwtCookie.setHttpOnly(true);
-        jwtCookie.setSecure(false);
+        jwtCookie.setSecure(true); // Use HTTPS in production
         jwtCookie.setPath("/");
         jwtCookie.setMaxAge(0); // Delete cookie
+        jwtCookie.setAttribute("SameSite", "None"); // Match login cookie settings
 
         response.addCookie(jwtCookie);
 
