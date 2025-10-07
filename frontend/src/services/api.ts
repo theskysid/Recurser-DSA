@@ -27,13 +27,17 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401 || error.response?.status === 403) {
+      const wasAuthenticated = localStorage.getItem('username') !== null;
+      
       // Clear any local storage
       localStorage.removeItem('username');
       sessionStorage.clear();
       
       // Only redirect if not already on login page
       if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
-        window.location.href = '/login?session=expired';
+        // Only show "session expired" if user was previously authenticated
+        const redirectUrl = wasAuthenticated ? '/login?session=expired' : '/login';
+        window.location.href = redirectUrl;
       }
     }
     return Promise.reject(error);
